@@ -30,10 +30,6 @@ This will:
     const VERSION = "0.2.1"
     ```
 
-    The VERSION should be a string in one of these formats: "3", "0.3",
-    "0.3.4". Any prefixes like "v" or suffixes like "0.3.3-beta" will be
-    stripped or generate an error.
-
 2. Apply the version bump - `bump_version major` will increment the major
 version number, `bump_version minor` will increment the middle version number,
 `bump_version patch` will increment the last version number. If your version is
@@ -48,3 +44,28 @@ version number, `bump_version minor` will increment the middle version number,
 6. Tag the new version.
 
 If any of these steps fail, `bump_version` will abort.
+
+## Notes
+
+The VERSION should be a string in one of these formats: "3", "0.3",
+"0.3.4". Any prefixes like "v" or suffixes like "0.3.3-beta" will be
+stripped or generate an error.
+
+- `"v0.1"` - parse error, no prefixes allowed.
+- `bump_version("0.1", "minor")` -> "0.2"
+- `bump_version("0.1", "patch")` -> "0.1.1"
+- `bump_version("0.1", "major")` -> "1.1"
+- `bump_version("0.1-beta", "major")` -> "1.1"
+- `bump_version("devel", "major")` -> parse error.
+
+We use the VERSION in code exclusively - any existing git tags are ignored.
+
+Alan Shreve would like to note that you probably shouldn't store version
+numbers in code - instead, check in `const VERSION = "devel"`, then build your
+project via:
+
+```
+go build -ldflags="-X main.VERSION=0.2"
+```
+
+Which you are welcome to do!
