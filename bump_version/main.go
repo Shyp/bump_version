@@ -10,10 +10,17 @@ import (
 	"github.com/Shyp/bump_version"
 )
 
-const VERSION = "4.1.1"
+const VERSION = "0.1"
 
 func usage() {
 	fmt.Fprintf(os.Stderr, "Usage: bump_version <major|minor|patch> <filename>\n")
+}
+
+func runCommand(binary string, args ...string) {
+	out, err := exec.Command(binary, args...).CombinedOutput()
+	if err != nil {
+		log.Fatalf("Error when running command: %s.\nOutput was:\n%s", err.Error(), string(out))
+	}
 }
 
 func main() {
@@ -33,9 +40,8 @@ func main() {
 	} else {
 		fmt.Fprintf(os.Stderr, "Bumped version to %s\n", version)
 	}
-	out, err := exec.Command("git", "tag", version.String()).CombinedOutput()
-	if err != nil {
-		log.Fatalf("Error when attempting to git tag: %s.\nOutput was:\n%s", err.Error(), string(out))
-	}
-	fmt.Fprintf(os.Stderr, "Tagged git version: %s. Commit your changes\n", version)
+	runCommand("git", "add", filename)
+	runCommand("git", "commit", "-m", version.String())
+	runCommand("git", "tag", version.String())
+	fmt.Fprintf(os.Stderr, "Added new commit and tagged version %s.\n", version)
 }
