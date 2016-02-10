@@ -132,7 +132,7 @@ func changeVersion(vtype VersionType, a *ast.BasicLit) (*Version, error) {
 // and writes the file back to disk. Returns the incremented Version object.
 func BumpInFile(vtype VersionType, filename string) (*Version, error) {
 	fset := token.NewFileSet()
-	parsedFile, err := parser.ParseFile(fset, filename, nil, 0)
+	parsedFile, err := parser.ParseFile(fset, filename, nil, parser.ParseComments)
 	if err != nil {
 		return nil, err
 	}

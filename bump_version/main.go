@@ -16,6 +16,7 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "Usage: bump_version <major|minor|patch> <filename>\n")
 }
 
+// runCommand execs the given command and exits if it fails.
 func runCommand(binary string, args ...string) {
 	out, err := exec.Command(binary, args...).CombinedOutput()
 	if err != nil {
