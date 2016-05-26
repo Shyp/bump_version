@@ -10,7 +10,7 @@ import (
 	"github.com/Shyp/bump_version/lib"
 )
 
-const VERSION = "0.4"
+const VERSION = 1.0
 
 func usage() {
 	fmt.Fprintf(os.Stderr, "Usage: bump_version <major|minor|patch> <filename>\n")
