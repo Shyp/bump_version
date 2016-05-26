@@ -99,20 +99,26 @@ func Parse(version string) (*Version, error) {
 
 // changeVersion takes a basic literal representing a string version, and
 // increments the version number per the given VersionType.
-func changeVersion(vtype VersionType, a *ast.BasicLit) (*Version, error) {
-	if a.Kind != token.STRING {
-		return nil, fmt.Errorf("VERSION is not a string, was %#v\n", a.Value)
-	}
-	versionNoQuotes := strings.Replace(a.Value, "\"", "", -1)
+func changeVersion(vtype VersionType, value string) (*Version, error) {
+	versionNoQuotes := strings.Replace(value, "\"", "", -1)
 	version, err := Parse(versionNoQuotes)
 	if err != nil {
 		return nil, err
 	}
 	if vtype == Major {
 		version.Major++
+		if version.Minor != -1 {
+			version.Minor = 0
+		}
+		if version.Patch != -1 {
+			version.Patch = 0
+		}
 	} else if vtype == Minor {
 		if version.Minor == -1 {
 			version.Minor = 0
+		}
+		if version.Patch != -1 {
+			version.Patch = 0
 		}
 		version.Minor++
 	} else if vtype == Patch {
@@ -123,7 +129,6 @@ func changeVersion(vtype VersionType, a *ast.BasicLit) (*Version, error) {
 	} else {
 		return nil, fmt.Errorf("Invalid version type: %s", vtype)
 	}
-	a.Value = fmt.Sprintf("\"%s\"", version)
 	return version, nil
 }
 
@@ -145,10 +150,14 @@ func BumpInFile(vtype VersionType, filename string) (*Version, error) {
 			spec, _ := gd.Specs[0].(*ast.ValueSpec)
 			if strings.ToUpper(spec.Names[0].Name) == "VERSION" {
 				value, _ := spec.Values[0].(*ast.BasicLit)
-				version, err := changeVersion(vtype, value)
+				if value.Kind != token.STRING {
+					return nil, fmt.Errorf("VERSION is not a string, was %#v\n", value.Value)
+				}
+				version, err := changeVersion(vtype, value.Value)
 				if err != nil {
 					return nil, err
 				}
+				value.Value = version.String()
 				f, err := os.Create(filename)
 				if err != nil {
 					return nil, err
