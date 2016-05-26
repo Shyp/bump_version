@@ -7,7 +7,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/Shyp/bump_version"
+	"github.com/Shyp/bump_version/lib"
 )
 
 const VERSION = "0.4"
@@ -43,6 +43,6 @@ func main() {
 	}
 	runCommand("git", "add", filename)
 	runCommand("git", "commit", "-m", version.String())
-	runCommand("git", "tag", version.String())
+	runCommand("git", "tag", version.String(), "--annotate", "--message", version.String())
 	fmt.Fprintf(os.Stderr, "Added new commit and tagged version %s.\n", version)
 }
