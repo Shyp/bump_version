@@ -157,7 +157,7 @@ func BumpInFile(vtype VersionType, filename string) (*Version, error) {
 				if err != nil {
 					return nil, err
 				}
-				value.Value = version.String()
+				value.Value = fmt.Sprintf("\"%s\"", version.String())
 				f, err := os.Create(filename)
 				if err != nil {
 					return nil, err
