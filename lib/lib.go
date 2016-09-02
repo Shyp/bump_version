@@ -162,7 +162,8 @@ func BumpInFile(vtype VersionType, filename string) (*Version, error) {
 				if err != nil {
 					return nil, err
 				}
-				err = printer.Fprint(f, fset, parsedFile)
+				cfg := printer.Config{Mode: printer.UseSpaces | printer.TabIndent, Tabwidth: 8}
+				err = cfg.Fprint(f, fset, parsedFile)
 				if err != nil {
 					return nil, err
 				}
