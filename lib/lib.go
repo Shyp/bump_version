@@ -132,16 +132,8 @@ func changeVersion(vtype VersionType, value string) (*Version, error) {
 	return version, nil
 }
 
-// BumpInFile finds a constant named VERSION, version, or Version in the file
-// with the given filename, increments the version per the given VersionType,
-// and writes the file back to disk. Returns the incremented Version object.
-func BumpInFile(vtype VersionType, filename string) (*Version, error) {
-	fset := token.NewFileSet()
-	parsedFile, err := parser.ParseFile(fset, filename, nil, parser.ParseComments)
-	if err != nil {
-		return nil, err
-	}
-	for _, decl := range parsedFile.Decls {
+func findBasicLit(file *ast.File) (*ast.BasicLit, error) {
+	for _, decl := range file.Decls {
 		switch gd := decl.(type) {
 		case *ast.GenDecl:
 			if gd.Tok != token.CONST {
@@ -149,29 +141,67 @@ func BumpInFile(vtype VersionType, filename string) (*Version, error) {
 			}
 			spec, _ := gd.Specs[0].(*ast.ValueSpec)
 			if strings.ToUpper(spec.Names[0].Name) == "VERSION" {
-				value, _ := spec.Values[0].(*ast.BasicLit)
-				if value.Kind != token.STRING {
+				value, ok := spec.Values[0].(*ast.BasicLit)
+				if !ok || value.Kind != token.STRING {
 					return nil, fmt.Errorf("VERSION is not a string, was %#v\n", value.Value)
 				}
-				version, err := changeVersion(vtype, value.Value)
-				if err != nil {
-					return nil, err
-				}
-				value.Value = fmt.Sprintf("\"%s\"", version.String())
-				f, err := os.Create(filename)
-				if err != nil {
-					return nil, err
-				}
-				cfg := printer.Config{Mode: printer.UseSpaces | printer.TabIndent, Tabwidth: 8}
-				err = cfg.Fprint(f, fset, parsedFile)
-				if err != nil {
-					return nil, err
-				}
-				return version, nil
+				return value, nil
 			}
 		default:
 			continue
 		}
 	}
-	return nil, fmt.Errorf("No VERSION const found in %s", filename)
+	return nil, errors.New("bump_version: No version const found")
+}
+
+func writeFile(filename string, fset *token.FileSet, file *ast.File) error {
+	f, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	cfg := printer.Config{Mode: printer.UseSpaces | printer.TabIndent, Tabwidth: 8}
+	return cfg.Fprint(f, fset, file)
+}
+
+func changeInFile(filename string, f func(*ast.BasicLit) error) error {
+	fset := token.NewFileSet()
+	parsedFile, err := parser.ParseFile(fset, filename, nil, parser.ParseComments)
+	if err != nil {
+		return err
+	}
+	lit, err := findBasicLit(parsedFile)
+	if err != nil {
+		return fmt.Errorf("No Version const found in %s", filename)
+	}
+	if err := f(lit); err != nil {
+		return err
+	}
+	writeErr := writeFile(filename, fset, parsedFile)
+	return writeErr
+}
+
+// SetInFile sets the version in filename to newVersion.
+func SetInFile(newVersion *Version, filename string) error {
+	return changeInFile(filename, func(lit *ast.BasicLit) error {
+		lit.Value = fmt.Sprintf("\"%s\"", newVersion.String())
+		return nil
+	})
+}
+
+// BumpInFile finds a constant named VERSION, version, or Version in the file
+// with the given filename, increments the version per the given VersionType,
+// and writes the file back to disk. Returns the incremented Version object.
+func BumpInFile(vtype VersionType, filename string) (*Version, error) {
+	var version *Version
+	err := changeInFile(filename, func(lit *ast.BasicLit) error {
+		var err error
+		version, err = changeVersion(vtype, lit.Value)
+		if err != nil {
+			return err
+		}
+		lit.Value = fmt.Sprintf("\"%s\"", version.String())
+		return nil
+	})
+	return version, err
 }
