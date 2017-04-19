@@ -32,7 +32,7 @@ func (v *Version) String() string {
 	} else if v.Major >= 0 {
 		return fmt.Sprintf("%d", v.Major)
 	} else {
-		return fmt.Sprintf("%!s(INVALID_VERSION)", v.Major)
+		return "%!s(INVALID_VERSION)"
 	}
 }
 

@@ -1,5 +1,7 @@
 .PHONY: test
 
+STATICCHECK := $(shell command -v staticcheck)
+
 install:
 	go install ./...
 
