@@ -1,4 +1,4 @@
-package bump_version
+package semver
 
 import (
 	"errors"

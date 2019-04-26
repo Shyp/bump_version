@@ -6,10 +6,10 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/Shyp/bump_version/lib"
+	"github.com/rogozhka/bumpme/internal/semver"
 )
 
-const VERSION = "1.3"
+const VERSION = "1.3.1"
 
 func usage() {
 	fmt.Fprintf(os.Stderr, "Usage: bump_version [--version=<version>] [<major|minor|patch>] <filename>\n")
@@ -32,7 +32,7 @@ func main() {
 	flag.Parse()
 	args := flag.Args()
 	var filename string
-	var version *bump_version.Version
+	var version *semver.Version
 	if *vsn != "" {
 		// no "minor"
 		if len(args) != 1 {
@@ -40,13 +40,13 @@ func main() {
 			return
 		}
 		var err error
-		version, err = bump_version.Parse(*vsn)
+		version, err = semver.Parse(*vsn)
 		if err != nil {
 			os.Stderr.WriteString(err.Error())
 			os.Exit(2)
 		}
 		filename = args[0]
-		setErr := bump_version.SetInFile(version, filename)
+		setErr := semver.SetInFile(version, filename)
 		if setErr != nil {
 			os.Stderr.WriteString(setErr.Error() + "\n")
 			os.Exit(2)
@@ -60,14 +60,14 @@ func main() {
 		filename = args[1]
 
 		var err error
-		version, err = bump_version.BumpInFile(bump_version.VersionType(versionTypeStr), filename)
+		version, err = semver.BumpInFile(semver.VersionType(versionTypeStr), filename)
 		if err != nil {
 			os.Stderr.WriteString(err.Error() + "\n")
 			os.Exit(2)
 		}
 	}
-	runCommand("git", "add", filename)
-	runCommand("git", "commit", "-m", version.String())
-	runCommand("git", "tag", version.String(), "--annotate", "--message", version.String())
+	//runCommand("git", "add", filename)
+	//runCommand("git", "commit", "-m", version.String())
+	//runCommand("git", "tag", version.String(), "--annotate", "--message", version.String())
 	os.Stdout.WriteString(version.String() + "\n")
 }
