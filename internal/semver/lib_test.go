@@ -1,6 +1,10 @@
 package semver
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func TestChangeVersion(t *testing.T) {
 	testCases := []struct {
@@ -23,4 +27,34 @@ func TestChangeVersion(t *testing.T) {
 			t.Errorf("changeVersion(%s, %s): got %s, want %s", tt.vtype, tt.in, v.String(), tt.out)
 		}
 	}
+}
+
+func TestExtract1(t *testing.T) {
+
+	path1 := "../../test/1/main.go"
+	v1 := "1.2.3"
+
+	str, err := Extract(path1)
+	assert.Nil(t, err, "err")
+	assert.Equal(t, v1, str, "v1")
+}
+
+func TestExtract2(t *testing.T) {
+
+	path1 := "../../test/2/main.go"
+	v1 := "0.3.2"
+
+	str, err := Extract(path1)
+	assert.Nil(t, err, "err")
+	assert.Equal(t, v1, str, "v1")
+}
+
+func TestExtractNonexistent(t *testing.T) {
+
+	path1 := "../../test/no/such/path/main.go"
+	v1 := ""
+
+	str, err := Extract(path1)
+	assert.NotNil(t, err, "err")
+	assert.Equal(t, v1, str, "v1")
 }
