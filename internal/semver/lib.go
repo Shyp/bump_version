@@ -189,6 +189,22 @@ func SetInFile(newVersion *Version, filename string) error {
 	})
 }
 
+func Extract(filename string) (string, error) {
+	fset := token.NewFileSet()
+	parsedFile, err := parser.ParseFile(fset, filename, nil, parser.ParseComments)
+	if err != nil {
+		return "", err
+	}
+	lit, err := findBasicLit(parsedFile)
+	if err != nil {
+		return "", fmt.Errorf("No version const | %s", filename)
+	}
+
+	raw := fmt.Sprintf("%v", lit.Value)
+	v := strings.TrimSpace(strings.Replace(raw, "\"", "", -1))
+	return v, nil
+}
+
 // BumpInFile finds a constant named VERSION, version, or Version in the file
 // with the given filename, increments the version per the given VersionType,
 // and writes the file back to disk. Returns the incremented Version object.
